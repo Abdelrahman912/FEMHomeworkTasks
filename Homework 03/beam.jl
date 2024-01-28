@@ -107,8 +107,8 @@ end
 # ╔═╡ 2f8c24a4-1d56-4733-8ab5-50a75185c203
 md"## Degree of Freedoms
 $\begin{gather}
-\text{unkowns: } u_2, w_2, ϕ_2, w_3 \rightarrow (4 \; DOKI) \\
-\text{from symmetry: } u_3 = 0, \phi_3 = 0, u_2 = -u_5, \phi_2 = -\phi_5, w_2 = w_5
+\text{unkowns: } u_2, w_2, ϕ_2, w_3, \phi_3^l \rightarrow (5 \; DOKI) \\
+\text{from symmetry: } u_3 = 0, \; \phi_3^r = -\phi_3^l , \; u_2 = -u_5, \; \phi_2 = -\phi_5, \; w_2 = w_5
 \end{gather}$"
 
 # ╔═╡ 2db25eec-7461-4af9-8dfa-d731eb82fdc5
@@ -234,7 +234,7 @@ end
 md"### **For Beam 2** :
 $\begin{gather}
 from: Node \; (2) \rightarrow Node \; (3) \\
-DOFs: u_2,w_2,\phi_2, w_3
+DOFs: u_2,w_2,\phi_2, w_3, \phi_3^l
 \end{gather}$
 #### Nodal Coordinates:
 $\begin{gather}
@@ -251,10 +251,11 @@ L = \sqrt{(d)^2 + (a)^2}
 $\begin{gather}
 \underline{K}^{2,g} = 
 \begin{bmatrix}
-\frac{EAc^2}{L} + \frac{12EIs^2}{L^3} & \frac{-EAcs}{L} + \frac{12EIcs}{L^3} & \frac{-6EIs}{L^2} & \frac{EAcs}{L} - \frac{12EIcs}{L^3} \\
-\frac{-EAcs}{L} + \frac{12EIcs}{L^3} & \frac{EAs^2}{L} + \frac{12EIc^2}{L^3} & \frac{-6EIc}{L^2} & \frac{-EAs^2}{L} - \frac{12EIc^2}{L^3} \\
-\frac{-6EIs}{L^2} & \frac{-6EIc}{L^2} & \frac{4EI}{L} & \frac{6EIc}{L^2} \\
-\frac{EAcs}{L} - \frac{12EIcs}{L^3} & \frac{-EAs^2}{L} - \frac{12EIc^2}{L^3} & \frac{6EIc}{L^2} & \frac{EAs^2}{L} + \frac{12EIc^2}{L^3}
+\frac{EAc^2}{L} + \frac{12EIs^2}{L^3} & \frac{-EAcs}{L} + \frac{12EIcs}{L^3} & \frac{-6EIs}{L^2} & \frac{EAcs}{L} - \frac{12EIcs}{L^3} & \frac{-6 EI s}{L^2} \\
+\frac{-EAcs}{L} + \frac{12EIcs}{L^3} & \frac{EAs^2}{L} + \frac{12EIc^2}{L^3} & \frac{-6EIc}{L^2} & \frac{-EAs^2}{L} - \frac{12EIc^2}{L^3} & \frac{-6 EI c}{L^2} \\
+\frac{-6EIs}{L^2} & \frac{-6EIc}{L^2} & \frac{4EI}{L} & \frac{6EIc}{L^2} & \frac{2EI}{L} \\
+\frac{EAcs}{L} - \frac{12EIcs}{L^3} & \frac{-EAs^2}{L} - \frac{12EIc^2}{L^3} & \frac{6EIc}{L^2} & \frac{EAs^2}{L} + \frac{12EIc^2}{L^3} & \frac{6 EI c}{L^2}\\
+\frac{-6 EI s}{L^2} & \frac{-6 EI c}{L^2} & \frac{2EI}{L} & \frac{6 EI c}{L^2} & \frac{4EI}{L}
 \end{bmatrix}
 \end{gather}$
 
@@ -283,7 +284,6 @@ begin
 				0 -6 * EI/L2^2 2*EI/L2 0 6 * EI/L2^2 4 * EI/L2]
 	K² = transpose(T2) * K2_local * T2
 	K² = K²[1:end .!= 4  ,1:end .!= 4]
-	K² = K²[1:end .!= 5  ,1:end .!= 5]
 	(K² = K² , L2)
 	
 end
@@ -344,16 +344,17 @@ end
 md"## Overall (Assembly) Stiffness Matrix
 ```math
 \begin{align}
-u_2 \; \; \;w_2 \; \;  \phi_2 \;\; \; w_3 \; \; \; \; \; \; \;\\
+u_2 \; \; \;w_2 \; \; \; \phi_2 \;\;  w_3 \; \; \; \phi_3^l\; \; \; \; \; \; \;\\
 \underline{K} = 
 \begin{bmatrix}
-- & - & - & - \\
-- & - & - & - \\
-- & - & - & - \\
-- & - & - & - \\
+- & - & - & - & - \\
+- & - & - & - & -\\
+- & - & - & - & - \\
+- & - & - & - & -\\
+- & - & - & - & -
 \end{bmatrix}
 \begin{matrix}
-\delta u_2 \\ \delta w_2 \\ \delta \phi_2 \\ \delta w_3
+\delta u_2 \\ \delta w_2 \\ \delta \phi_2 \\ \delta w_3 \\ \delta \phi_3^l
 \end{matrix}
 \end{align}
 ```
@@ -363,18 +364,19 @@ u_2 \; \; \;w_2 \; \;  \phi_2 \;\; \; w_3 \; \; \; \; \; \; \;\\
 begin
 
 	# Beam 1: u2 , w2 , ϕ2
-	K¹_all = [K¹ zeros(3);0 0 0 0] 
+		K¹_all = [K¹ zeros(3) zeros(3);0 0 0 0 0 ; 0 0 0 0 0] 	
 	# Beam2: u2, w2, ϕ2 , w3
 	K²_all = K²
 	# truss: w3 
-	K³_all = zeros(4,4)
+	K³_all = zeros(5,5)
 	K³_all[4,4] = K³
 	K³_all
 	# spring; u2, ϕ2
-	Kˢ_all =[Kˢ[1,1] 0 Kˢ[1,2] 0;
-			 0 0 0 0;
-			 Kˢ[2,1] 0 Kˢ[2,2] 0;
-			0 0 0 0]
+	Kˢ_all =[Kˢ[1,1] 0 Kˢ[1,2] 0 0;
+			 0 0 0 0 0;
+			 Kˢ[2,1] 0 Kˢ[2,2] 0 0;
+			0 0 0 0 0;
+	0 0 0 0 0 ]
 	K = K¹_all + K²_all + K³_all + Kˢ_all
 end
 
@@ -458,7 +460,7 @@ end
 begin
 	r_total = ru + rp
 	rg = transpose(T2) * r_total
-	r = [rg[1:3]; rg[5]]
+	r = [rg[1:3]; rg[4:5]]
 	(r = r, T2)
 end
 
@@ -491,9 +493,9 @@ M = EIκ
 
 # ╔═╡ 91d9ab2a-ad4a-44c7-be93-eea84da6d276
 begin
-	ξm = -1/(2+Z)
+	ξm =-1/(2+Z)
 	twoLsq = - (2/L2)^2 
-	M =EI * twoLsq * [1.5 * ξm (L2/4) * (1-3*ξm) -1.5 * ξm (-L2/4) * (1+3*ξm)] * [u[2] ; u[3]; u[4]; 0]
+	M =EI * twoLsq * [1.5 * ξm (L2/4) * (1-3*ξm) -1.5 * ξm (-L2/4) * (1+3*ξm)] * u[2:5]
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
