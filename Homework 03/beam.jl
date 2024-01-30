@@ -123,17 +123,17 @@ $\begin{gather}
 N_1 = \frac{1}{2} ⋅ (1 - \xi) \\
 N_2 = \frac{1}{2} ⋅ (1+ \xi)
 \end{gather}$
+#### Size (Thickness) Approximation:
+$\begin{gather}
+t(\xi) = N_1 t_1 + N_2 t_2
+\end{gather}$
 #### Area Approximation:
 $\begin{gather}
-A_1 = t_1^2 \\
-A_2 = t_2^2 \\
-A(\xi) = N_1 A_1 + N_2 A_2
+A(\xi) = t(\xi) \cdot t (\xi)
 \end{gather}$
 #### Inertia Approximation:
 $\begin{gather}
-I_1 = \frac{t_1^4}{12} \\ 
-I_2 = \frac{t_2^4}{12} \\
-I(\xi) = N_1 I_1 + N_2 I_2 
+I(\xi) = \frac{t(\xi)^4}{12}
 \end{gather}$
 
 #### Local Stiffness Matrix:
@@ -165,27 +165,26 @@ S & C & 0 \\
 "
 
 # ╔═╡ fde0a499-b19b-4fb8-9bfc-0e7894c4ae25
-begin
-	A1 = t1^2 
-	A2 = t2^2 
-	I1 = (t1^4 )/12
-	I2 = (t2^4)/12
-	(A₁ = A1, A₂ = A2, I₁ = I1, I₂ = I2 )
+function t(ξ)
+	N1 = 0.5 * (1 - ξ)
+	N2 = 0.5 * (1+ξ)
+	t = N1 * t1 + N2 * t2
 end
 
 # ╔═╡ e5e6e4ec-13db-4bad-be6f-144225e5c0aa
 function A(ξ)
-	N1 = 0.5 * (1 - ξ)
-	N2 = 0.5 * (1+ξ)
-	A = N1 * A1 +N2 * A2 
+	
+	A = t(ξ) * t(ξ)
 end
 
 # ╔═╡ 83327af2-b0ad-489d-8ab9-433c665de2ec
 function I(ξ)
-	N1 = 0.5 * (1 - ξ)
-	N2 = 0.5 * (1+ξ)
-	I = N1 * I1 +N2 * I2 
+	
+	I = (t(ξ)^4)/(12)
 end
+
+# ╔═╡ 9ee2e6da-62bc-4d3e-a281-9606be8dacc7
+I(0.5)
 
 # ╔═╡ 5569c2e2-55d6-44ef-be60-e943dd43bea4
 begin
@@ -193,9 +192,11 @@ begin
 	Bᵘ = 1/L 
 	E = Eb 
 	# Numerical Integeration
-	α = 2 
-	ξ = 0
-	Kᵘ = α * (Bᵘ * E * A(ξ) * Bᵘ) * (L/2)
+	α1_u1 = 1
+	ξ1_u1 = -1 / sqrt(3)
+	α2_u1 = 1 
+	ξ2_u1 = 1 / sqrt(3)
+	Kᵘ = α1_u1 * (Bᵘ * E * A(ξ1_u1) * Bᵘ) * (L/2) + α2_u1 * (Bᵘ * E * A(ξ2_u1) * Bᵘ) * (L/2)
 	(Kᵘ = Kᵘ, L)
 end
 
@@ -207,12 +208,21 @@ end
 # ╔═╡ d8368947-46e4-48cc-b286-c94451263877
 begin
 	# Numerical Integration
-	α1 = 1 
-	ξ1 = -1/sqrt(3)
-	α2 = 1
-	ξ2 = 1 / sqrt(3)
+	α1_w1 = 0.34785
+	ξ1_w1 = -0.86114 
+	
+	α2_w1 = 0.65241
+	ξ2_w1 = -0.33998
+	
+	α3_w1 = 0.34784
+	ξ3_w1 = 0.86114
+	
+	α4_w1 = 0.65241
+	ξ4_w1 = 0.33998
+	
 	Cʷ = (ξ) -> E * I(ξ)
-	Kʷ = α1 * transpose(Bʷ(ξ1)) * Cʷ(ξ1) * Bʷ(ξ1) * (L/2) + α2 * transpose(Bʷ(ξ2)) * Cʷ(ξ2) * Bʷ(ξ2) * (L/2)
+	
+	Kʷ = α1_w1 * transpose(Bʷ(ξ1_w1)) * Cʷ(ξ1_w1) * Bʷ(ξ1_w1) * (L/2) + α2_w1 * transpose(Bʷ(ξ2_w1)) * Cʷ(ξ2_w1) * Bʷ(ξ2_w1) * (L/2) + α3_w1 * transpose(Bʷ(ξ3_w1)) * Cʷ(ξ3_w1) * Bʷ(ξ3_w1) * (L/2) + α4_w1 * transpose(Bʷ(ξ4_w1)) * Cʷ(ξ4_w1) * Bʷ(ξ4_w1) * (L/2);
 	(Kʷ = Kʷ , L)
 end
 
@@ -335,7 +345,7 @@ end
 begin
 	ξs = xToxi(b/3)
 	L1 = L
-	Bs = [0 0.25 * (1-ξs)^2 * (2+ξs) -(L1/8) * (1-ξs)^2 * (1+ξs)]
+	Bs = [0 0.25 * (1+ξs)^2 * (2-ξs) +(L1/8) * (1+ξs)^2 * (1-ξs)]
 	Kˢ = transpose(T1) * (transpose(Bs) * Ks * Bs) * T1
 	Kˢ = Kˢ[1:end .!= 2, 1:end .!= 2]
 end
@@ -789,6 +799,7 @@ version = "17.4.0+0"
 # ╠═fde0a499-b19b-4fb8-9bfc-0e7894c4ae25
 # ╠═e5e6e4ec-13db-4bad-be6f-144225e5c0aa
 # ╠═83327af2-b0ad-489d-8ab9-433c665de2ec
+# ╠═9ee2e6da-62bc-4d3e-a281-9606be8dacc7
 # ╠═5569c2e2-55d6-44ef-be60-e943dd43bea4
 # ╠═3886c3ac-87f7-4604-aac5-b3c1f8191f79
 # ╠═d8368947-46e4-48cc-b286-c94451263877
